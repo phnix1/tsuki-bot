@@ -16,7 +16,6 @@ A simple, modular Discord bot built with Python.
 -   🎫 Ticket system --- create and manage support tickets
 -   🔨 Moderation --- ban, kick, clear messages, timeout, untimeout
 -   🔔 Automations --- autorole, welcome messages, reminders
--   🙋 Custom Help Menu --- clean embed-based help system
 -   📊 Invite Tracker --- track server invites per user
 -   🧩 Custom Commands --- add your own commands dynamically
 
