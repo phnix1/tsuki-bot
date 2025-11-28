@@ -1,0 +1,16 @@
+# Virtual environment
+.venv/
+venv/
+
+# PyCharm settings
+.idea/
+
+# FFmpeg binaries
+ffmpeg/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Sensitive config
+config.json

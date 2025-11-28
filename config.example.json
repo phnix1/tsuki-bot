@@ -1,0 +1,6 @@
+{
+  "prefix": "!",
+  "token": "YOUR_TOKEN",
+  "default_staff_role": "Staff",
+  "default_ticket_category": "Tickets"
+}
