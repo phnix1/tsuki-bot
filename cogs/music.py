@@ -41,7 +41,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
     @classmethod
     async def from_query(cls, query, *, loop, requester, stream=True):
-        # Convert plain query into a YouTube search
+        # Converts plain query into a youtube search
         if not (query.startswith("http://") or query.startswith("https://")):
             query = f"ytsearch:{query}"
 
@@ -50,7 +50,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
         data = await loop.run_in_executor(None, run)
 
-        # If it's search or playlist, get the first entry
+        # if it's search or playlist, get the first entry
         if "entries" in data:
             data = data["entries"][0]
 
@@ -142,7 +142,7 @@ class Music(commands.Cog):
         return self.players[guild.id]
 
     async def ensure_voice(self, ctx) -> discord.VoiceClient | None:
-        """Ensure the bot is connected to the user's voice channel."""
+        """Ensure the bot is connected to the user's voice channel (used for join / first play)."""
         if ctx.author.voice is None:
             await ctx.send("You must be in a voice channel to use music commands.")
             return None
@@ -162,6 +162,26 @@ class Music(commands.Cog):
             except Exception as e:
                 await ctx.send(f"Failed to move to your channel: `{e}`")
                 return None
+
+        return vc
+
+    async def require_same_voice(self, ctx) -> discord.VoiceClient | None:
+        """
+        Require the user to be in the same voice channel as the bot.
+        Used for playback control commands (play/pause/resume/skip/stop/volume).
+        """
+        vc = ctx.guild.voice_client
+        if vc is None or not vc.is_connected():
+            await ctx.send("I'm not connected to a voice channel.")
+            return None
+
+        if ctx.author.voice is None:
+            await ctx.send("You must be in my voice channel to use this command.")
+            return None
+
+        if ctx.author.voice.channel != vc.channel:
+            await ctx.send(f"You must be in `{vc.channel.name}` to use this command.")
+            return None
 
         return vc
 
@@ -188,10 +208,22 @@ class Music(commands.Cog):
 
     @commands.command(name="play", aliases=["p"])
     async def play(self, ctx, *, query: str):
-        """Add a song to the queue (or play it instantly)."""
-        vc = await self.ensure_voice(ctx)
-        if vc is None:
-            return
+        """
+        Add a song to the queue (or play it instantly).
+        User MUST be in the same voice channel as the bot if the bot is already connected.
+        """
+        vc = ctx.guild.voice_client
+
+        if vc is None or not vc.is_connected():
+            # first time: join the user's channel
+            vc = await self.ensure_voice(ctx)
+            if vc is None:
+                return
+        else:
+            # bot is already in a channel → require user to be with the bot
+            vc = await self.require_same_voice(ctx)
+            if vc is None:
+                return
 
         player = self.get_player(ctx.guild)
         await ctx.send("🔍 Searching...")
@@ -207,7 +239,7 @@ class Music(commands.Cog):
             print(e)
             return await ctx.send("Failed to retrieve audio.")
 
-        # Apply the guild's volume to the new source
+        # apply the server's volume to the new source
         source.volume = player.volume
 
         await player.add_to_queue(source, ctx.channel)
@@ -221,34 +253,43 @@ class Music(commands.Cog):
 
     @commands.command(name="pause")
     async def pause(self, ctx):
-        """Pause the current song."""
-        vc = ctx.guild.voice_client
-        if not vc or not vc.is_playing():
+        """Pause the current song (only if you're in the same voice channel as the bot)."""
+        vc = await self.require_same_voice(ctx)
+        if vc is None:
+            return
+        if not vc.is_playing():
             return await ctx.send("Nothing is playing.")
         vc.pause()
         await ctx.send("⏸️ Paused.")
 
     @commands.command(name="resume")
     async def resume(self, ctx):
-        """Resume playback."""
-        vc = ctx.guild.voice_client
-        if not vc or not vc.is_paused():
+        """Resume playback (only if you're in the same voice channel as the bot)."""
+        vc = await self.require_same_voice(ctx)
+        if vc is None:
+            return
+        if not vc.is_paused():
             return await ctx.send("Nothing to resume.")
         vc.resume()
         await ctx.send("▶️ Resumed.")
 
     @commands.command(name="skip")
     async def skip(self, ctx):
-        """Skip the current song."""
-        vc = ctx.guild.voice_client
-        if not vc or not vc.is_playing():
+        """Skip the current song (only if you're in the same voice channel as the bot)."""
+        vc = await self.require_same_voice(ctx)
+        if vc is None:
+            return
+        if not vc.is_playing():
             return await ctx.send("Nothing is playing to skip.")
         vc.stop()
         await ctx.send("⏭️ Skipped.")
 
     @commands.command(name="stop")
     async def stop(self, ctx):
-        """Stop playback and clear the queue."""
+        """Stop playback and clear the queue (only if you're in the same voice channel as the bot)."""
+        vc = await self.require_same_voice(ctx)
+        if vc is None:
+            return
         player = self.get_player(ctx.guild)
         player.stop()
         await ctx.send("⏹️ Stopped and cleared the queue.")
@@ -279,8 +320,14 @@ class Music(commands.Cog):
 
     @commands.command(name="volume", aliases=["vol"])
     async def volume(self, ctx, volume: int | None = None):
-        """View or set the volume (0–100)."""
-        vc = ctx.guild.voice_client
+        """
+        View or set the volume (0–100).
+        User must be in the same voice channel as the bot.
+        """
+        vc = await self.require_same_voice(ctx)
+        if vc is None:
+            return
+
         player = self.get_player(ctx.guild)
 
         if volume is None:
@@ -288,15 +335,12 @@ class Music(commands.Cog):
                 f"🔊 Current volume: `{int(player.volume * 100)}%`"
             )
 
-        if vc is None or not vc.is_connected():
-            return await ctx.send("I'm not connected to a voice channel.")
-
         if volume < 0 or volume > 100:
             return await ctx.send("Please choose a value between `0` and `100`.")
 
         player.volume = volume / 100
 
-        # Update current track
+        # update current track
         if vc.source and isinstance(vc.source, discord.PCMVolumeTransformer):
             vc.source.volume = player.volume
 
