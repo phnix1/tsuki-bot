@@ -16,7 +16,9 @@ ytdl_format_options = {
     "format": "bestaudio/best",
     "noplaylist": True,
     "quiet": True,
-    "extract_flat": False,
+    "ignoreerrors": True,
+
+    "source_adress": "0.0.0.0",
     "extractor_args": {
         "youtube": {
             "player_client": ["default"]
@@ -25,14 +27,15 @@ ytdl_format_options = {
 }
 
 ffmpeg_options = {
-    "options": "-vn"
+    "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+    "options": "-vn",
 }
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, requester, volume=0.5):
+    def __init__(self, source, *, data, requester, volume=1.0):
         super().__init__(source, volume)
         self.data = data
         self.requester = requester
@@ -74,7 +77,7 @@ class GuildMusicPlayer:
         self.queue: list[YTDLSource] = []
         self.current: YTDLSource | None = None
         self.text_channel: discord.TextChannel | None = None
-        self.volume: float = 0.5  # default volume (50%)
+        self.volume: float = 1.0  # default volume (100%)
 
     @property
     def voice(self) -> discord.VoiceClient | None:
