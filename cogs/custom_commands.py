@@ -102,12 +102,7 @@ class CustomCommands(commands.Cog):
         if cmd_name in cmds:
             resp = cmds[cmd_name].replace("{user}", message.author.mention)
             await message.channel.send(resp)
-            return  # am tratat noi comanda, gata
-
-        # daca nu e custom, nu facem nimic aici;
-        # botul oricum proceseaza comenzile lui normale implicit
-
-
+            return
 
 def setup(bot: commands.Bot):
     bot.add_cog(CustomCommands(bot))

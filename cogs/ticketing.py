@@ -49,7 +49,7 @@ class Ticketing(commands.Cog):
         category = discord.utils.get(guild.categories, name=name)
         if category:
             return category
-        # creaza categorie
+        # create category
         overwrites = {
             guild.default_role: discord.PermissionOverwrite(view_channel=False),
             guild.me: discord.PermissionOverwrite(view_channel=True),
@@ -123,7 +123,7 @@ class Ticketing(commands.Cog):
         guild = ctx.guild
         channel = ctx.channel
 
-        # verificam daca acest canal este un ticket
+        # verify ticket channel
         guild_tickets = self.get_guild_tickets(guild.id)
         owner_id = None
         for uid, ch_id in guild_tickets.items():
@@ -134,7 +134,7 @@ class Ticketing(commands.Cog):
         if owner_id is None:
             return await ctx.send("This doesn't seem to be a ticket channel.")
 
-        # scoatem ticket-ul din baza noastra
+        # removing ticket channel
         self.set_ticket(guild.id, owner_id, None)
 
         await ctx.send("Ticket closed. The channel will be deleted. 🔒", delete_after=3)

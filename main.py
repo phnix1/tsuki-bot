@@ -6,7 +6,7 @@ with open ("config.json") as f:
     config = json.load(f)
 
 class CustomHelp(commands.MinimalHelpCommand):
-    """Help command cu embed-uri drăguțe."""
+    """Embedded help commands."""
 
     EMOJIS = {
         "Automations": "⚙️",

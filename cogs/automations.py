@@ -80,12 +80,12 @@ class Automations(commands.Cog):
     ):
         """Set the channel + welcome message."""
         if message is None:
-            message = "Bine ai venit, {member} pe {server}!"
+            message = "Welcome, {member} on {server}!"
         self.set_guild_cfg(ctx.guild.id, "welcome_channel", channel.id)
         self.set_guild_cfg(ctx.guild.id, "welcome_message", message)
         await ctx.send(
-            f"Mesaj de bun venit setat pentru {channel.mention}.\n"
-            f"Mesaj: `{message}` (foloseste {member} / {server})"
+            f"Welcome message set for {channel.mention}.\n"
+            f"Message: `{message}` (use {member} / {server})"
         )
 
     @auto_group.command(name="autorole")

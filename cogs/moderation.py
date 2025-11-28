@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from datetime import timedelta
 
-BANNED_WORDS = ["injuratura1", "injuratura2", "prost", "noob"]
+BANNED_WORDS = ["nigga", "bitch", "nigger", "autistic", "retarded"]
 
 
 class Moderation(commands.Cog):
@@ -18,7 +18,7 @@ class Moderation(commands.Cog):
 
         content_lower = message.content.lower()
 
-        # FILTRU CUVINTE
+        # word filter
         if any(bad in content_lower for bad in BANNED_WORDS):
             try:
                 await message.delete()
@@ -29,7 +29,7 @@ class Moderation(commands.Cog):
             except discord.Forbidden:
                 pass
 
-        # ANTI-SPAM FOARTE SIMPLU
+        # anti-spam
         from datetime import datetime
 
         now = datetime.utcnow()
