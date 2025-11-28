@@ -2,6 +2,8 @@ import json
 import os
 import discord
 from discord.ext import commands
+with open ("config.json") as f:
+    config = json.load(f)
 
 class CustomHelp(commands.MinimalHelpCommand):
     """Help command cu embed-uri drăguțe."""
@@ -194,4 +196,4 @@ for ext in initial_extensions:
     except Exception as e:
         print(f"Failed to load {ext}: {e}")
 
-bot.run('DISCORD_TOKEN')
+bot.run(config["token"])
