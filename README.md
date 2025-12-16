@@ -10,7 +10,6 @@ A simple, modular Discord bot built with Python.
 
 ## ✨ Features
 
--   🛠️ Fully modular system --- each feature is a separate cog
 -   🎵 Music system --- play, pause, resume, queue, skip, stop, volume
     control
 -   🎫 Ticket system --- create and manage support tickets
